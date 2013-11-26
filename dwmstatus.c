@@ -1,11 +1,12 @@
 #define _BSD_SOURCE
+#include "alsavolume.h"
+
 #include <unistd.h>
-#include <stdio.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
 #include <strings.h>
-#include <sys/time.h>
 #include <time.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -116,6 +117,7 @@ int main(void)
 	char *avgs;
 	char *tmbln;
         char coninfo[CONNECTION_INFO_LEN];
+        long volume;
         
         dpy = XOpenDisplay(NULL);
 
@@ -129,10 +131,11 @@ int main(void)
         {
 		avgs = loadavg();
                 get_connection_info(coninfo, CONNECTION_INFO_LEN);
+                volume = alsa_get_volume();
 		tmbln = mktimes("%a %b %d %H:%M %Y", tzberlin);
 
-		status = smprintf("%s | L:%s | %s",
-				coninfo, avgs, tmbln);
+		status = smprintf("%d% | %s | L:%s | %s",
+				volume, coninfo, avgs, tmbln);
 
 		setstatus(status);
 
