@@ -13,6 +13,8 @@
 #include <X11/Xlib.h>
 
 #define UPDATE_PERIOD 60
+#define CONNECTION_INFO_COMMAND "~/scripts/dwmstatus-connection-info.sh"
+#define CONNECTION_INFO_LEN 128
 
 char *tzberlin = "Europe/Berlin";
 
@@ -92,11 +94,28 @@ char *loadavg(void)
 	return smprintf("%.2f %.2f %.2f", avgs[0], avgs[1], avgs[2]);
 }
 
+void get_connection_info(char *buf, size_t buf_len)
+{
+    FILE *pf;
+    pf = popen(CONNECTION_INFO_COMMAND, "r");
+    
+    if (NULL == pf)
+    {
+         perror("connection info");
+    }
+    else
+    {
+        fgets(buf, buf_len, pf);
+        pclose(pf);
+    }
+}
+
 int main(void)
 {
 	char *status;
 	char *avgs;
 	char *tmbln;
+        char coninfo[CONNECTION_INFO_LEN];
         
         dpy = XOpenDisplay(NULL);
 
@@ -109,10 +128,11 @@ int main(void)
 	for (;;sleep(UPDATE_PERIOD)) 
         {
 		avgs = loadavg();
+                get_connection_info(coninfo, CONNECTION_INFO_LEN);
 		tmbln = mktimes("%a %b %d %H:%M %Y", tzberlin);
 
-		status = smprintf("L:%s %s",
-				avgs, tmbln);
+		status = smprintf("%s | L:%s | %s",
+				coninfo, avgs, tmbln);
 
 		setstatus(status);
 
