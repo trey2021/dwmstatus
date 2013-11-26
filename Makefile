@@ -42,6 +42,11 @@ install: all
 	@cp -f ${NAME} ${DESTDIR}${PREFIX}/bin
 	@chmod 755 ${DESTDIR}${PREFIX}/bin/${NAME}
 
+restart: install
+	$(eval PID := $(shell ps -e | grep dwmstatus$$ | awk '{print $$1}'))
+	@echo Killing current dwmstatus daemon $(PID)
+	@kill $(PID)
+
 uninstall:
 	@echo removing executable file from ${DESTDIR}${PREFIX}/bin
 	@rm -f ${DESTDIR}${PREFIX}/bin/${NAME}

@@ -12,14 +12,13 @@
 
 #include <X11/Xlib.h>
 
-char *tzargentina = "America/Buenos_Aires";
-char *tzutc = "UTC";
+#define UPDATE_PERIOD 60
+
 char *tzberlin = "Europe/Berlin";
 
 static Display *dpy;
 
-char *
-smprintf(char *fmt, ...)
+char *smprintf(char *fmt, ...)
 {
 	va_list fmtargs;
 	char *ret;
@@ -30,7 +29,8 @@ smprintf(char *fmt, ...)
 	va_end(fmtargs);
 
 	ret = malloc(++len);
-	if (ret == NULL) {
+	if (ret == NULL) 
+        {
 		perror("malloc");
 		exit(1);
 	}
@@ -42,14 +42,12 @@ smprintf(char *fmt, ...)
 	return ret;
 }
 
-void
-settz(char *tzname)
+void settz(char *tzname)
 {
 	setenv("TZ", tzname, 1);
 }
 
-char *
-mktimes(char *fmt, char *tzname)
+char *mktimes(char *fmt, char *tzname)
 {
 	char buf[129];
 	time_t tim;
@@ -59,12 +57,15 @@ mktimes(char *fmt, char *tzname)
 	settz(tzname);
 	tim = time(NULL);
 	timtm = localtime(&tim);
-	if (timtm == NULL) {
+
+	if (timtm == NULL) 
+        {
 		perror("localtime");
 		exit(1);
 	}
 
-	if (!strftime(buf, sizeof(buf)-1, fmt, timtm)) {
+	if (!strftime(buf, sizeof(buf)-1, fmt, timtm)) 
+        {
 		fprintf(stderr, "strftime == 0\n");
 		exit(1);
 	}
@@ -72,19 +73,18 @@ mktimes(char *fmt, char *tzname)
 	return smprintf("%s", buf);
 }
 
-void
-setstatus(char *str)
+void setstatus(char *str)
 {
 	XStoreName(dpy, DefaultRootWindow(dpy), str);
 	XSync(dpy, False);
 }
 
-char *
-loadavg(void)
+char *loadavg(void)
 {
 	double avgs[3];
 
-	if (getloadavg(avgs, 3) < 0) {
+	if (getloadavg(avgs, 3) < 0) 
+        {
 		perror("getloadavg");
 		exit(1);
 	}
@@ -92,32 +92,31 @@ loadavg(void)
 	return smprintf("%.2f %.2f %.2f", avgs[0], avgs[1], avgs[2]);
 }
 
-int
-main(void)
+int main(void)
 {
 	char *status;
 	char *avgs;
-	char *tmar;
-	char *tmutc;
 	char *tmbln;
+        
+        dpy = XOpenDisplay(NULL);
 
-	if (!(dpy = XOpenDisplay(NULL))) {
+	if (!dpy) 
+        {
 		fprintf(stderr, "dwmstatus: cannot open display.\n");
 		return 1;
 	}
 
-	for (;;sleep(90)) {
+	for (;;sleep(UPDATE_PERIOD)) 
+        {
 		avgs = loadavg();
-		tmar = mktimes("%H:%M", tzargentina);
-		tmutc = mktimes("%H:%M", tzutc);
-		tmbln = mktimes("KW %W %a %d %b %H:%M %Z %Y", tzberlin);
+		tmbln = mktimes("%a %b %d %H:%M %Y", tzberlin);
 
-		status = smprintf("L:%s A:%s U:%s %s",
-				avgs, tmar, tmutc, tmbln);
+		status = smprintf("L:%s %s",
+				avgs, tmbln);
+
 		setstatus(status);
+
 		free(avgs);
-		free(tmar);
-		free(tmutc);
 		free(tmbln);
 		free(status);
 	}
