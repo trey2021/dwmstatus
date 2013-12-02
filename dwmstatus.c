@@ -17,9 +17,14 @@
 #define CONNECTION_INFO_COMMAND "~/scripts/dwmstatus-connection-info.sh"
 #define CONNECTION_INFO_LEN 128
 
-char *tzberlin = "Europe/Berlin";
+char *timezone = "US/Eastern";
 
 static Display *dpy;
+
+struct status_element
+{
+    void (*update)(char *display_str);
+};
 
 char *smprintf(char *fmt, ...)
 {
@@ -132,10 +137,10 @@ int main(void)
 		avgs = loadavg();
                 get_connection_info(coninfo, CONNECTION_INFO_LEN);
                 volume = alsa_get_volume();
-		tmbln = mktimes("%a %b %d %H:%M %Y", tzberlin);
+		tmbln = mktimes("%a %b %d %H:%M %Y", timezone);
 
-		status = smprintf("%d% | %s | L:%s | %s",
-				volume, coninfo, avgs, tmbln);
+		status = smprintf("%d% | %s | %s",
+				volume, coninfo,tmbln);
 
 		setstatus(status);
 
